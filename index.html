@@ -57,6 +57,11 @@
     font-size: 2.6cqw; padding: .45em 1.2em; border-radius: 999px;
     background: #ffcc33; color: #4a2508; box-shadow: 0 5px 0 #b8800f;
   }
+  #bMusic {
+    position: absolute; left: 1.4cqw; bottom: 1.4cqw; z-index: 20;
+    font-size: 2.4cqw; padding: .3em .5em; line-height: 1;
+    background: rgba(255,255,255,.85); box-shadow: 0 3px 0 rgba(0,0,0,.25);
+  }
   button:active { transform: translateY(3px); box-shadow: 0 2px 0 #b8800f; }
   button.blue { background: #6cc7ff; box-shadow: 0 5px 0 #2f84b8; color: #0f3550; }
   button.pink { background: #ff9ccf; box-shadow: 0 5px 0 #c2558f; color: #5a1035; }
@@ -134,6 +139,8 @@
     <button class="blue" id="bHome">🏠 選單</button>
   </div>
   <div id="hint"></div>
+  <audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+  <button id="bMusic" aria-label="背景音樂開關" title="背景音樂">🔊</button>
 
   <div class="screen show" id="menu">
     <div class="gems" id="menuGems"></div>
@@ -1112,6 +1119,32 @@ function frame(now) {
 updateGems();
 resize();
 requestAnimationFrame(frame);
+</script>
+<script>
+// ---------- 背景音樂 ----------
+(() => {
+  const bgm = document.getElementById('bgm'), btn = document.getElementById('bMusic');
+  const KEY = 'draw-save-monkey-music';
+  let on = true;
+  try { on = localStorage.getItem(KEY) !== 'off'; } catch (e) {}
+  bgm.volume = 0.45;
+  const play = () => { if (on && !document.hidden) bgm.play().catch(() => {}); };
+  const render = () => { btn.textContent = on ? '🔊' : '🔇'; };
+  render();
+  // 瀏覽器規定要等使用者先互動才能播放聲音
+  const unlock = () => { play(); window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
+  window.addEventListener('pointerdown', unlock);
+  window.addEventListener('keydown', unlock);
+  btn.addEventListener('pointerdown', e => e.stopPropagation());
+  btn.addEventListener('click', () => {
+    on = !on;
+    try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) {}
+    if (on) play(); else bgm.pause();
+    render();
+  });
+  // 切到背景時暫停，回來再播
+  document.addEventListener('visibilitychange', () => { if (document.hidden) bgm.pause(); else play(); });
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
